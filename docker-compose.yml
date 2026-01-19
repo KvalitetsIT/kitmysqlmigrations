@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # MySQL Databasen
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootroot
+      MYSQL_DATABASE: app
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: test1234
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootroot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Liquibase - kører migrationerne
+  liquibase:
+    build: migrations
+    container_name: liquibase_migration
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Sætter properties for at forbinde til databasen
+      LIQUIBASE_COMMAND_DRIVER: com.mysql.cj.jdbc.Driver
+      LIQUIBASE_COMMAND_URL: jdbc:mysql://db:3306/app?allowPublicKeyRetrieval=true&useSSL=false
+      LIQUIBASE_COMMAND_USERNAME: appuser
+      LIQUIBASE_COMMAND_PASSWORD: test1234
